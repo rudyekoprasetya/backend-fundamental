@@ -5,6 +5,8 @@ const Hapi = require('@hapi/hapi');
 const notes = require('./api/notes');
 //import service
 const NotesService = require('./services/inMemory/NotesService');
+//import validator Joi
+const NotesValidator = require('./validator/notes');
 
 const init = async() =>{
 	const noteService = new NotesService();
@@ -26,7 +28,9 @@ const init = async() =>{
 	await server.register({
 		plugin: notes,
 		options: {
-			service: noteService
+			service: noteService,
+			//tambakan validator
+			validator: NotesValidator
 		}
 	});
 
