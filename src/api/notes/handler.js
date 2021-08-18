@@ -14,12 +14,12 @@ class NotesHandler {
 
     }
 
-    postNoteHandler(req,h){
+    async postNoteHandler(req,h){
         try {
             // memasukan validator di handler post 
             this._validator.validateNotePayload(req.payload);
             const {title = 'untitled', body, tags} =req.payload;
-            const noteId = this._service.addNote({title, body,tags});
+            const noteId = await this._service.addNote({title, body,tags});
             const res = h.response({
                 status: 'success',
                 message: 'Catatan berhasil ditambahkan',
@@ -56,8 +56,8 @@ class NotesHandler {
         }
     }
 
-    getNotesHandler() {
-        const notes = this._service.getNotes();
+    async getNotesHandler() {
+        const notes = await this._service.getNotes();
         return {
             status: 'success',
             data: {
@@ -66,10 +66,10 @@ class NotesHandler {
         }
     }
 
-    getNoteByIdHandler(req,h) {
+    async getNoteByIdHandler(req,h) {
         try { 
             const { id } = req.params;
-            const note = this._service.getNotesById(id);
+            const note = await this._service.getNoteById(id);
             return {
                 status: 'success',
                 data: {
@@ -103,14 +103,14 @@ class NotesHandler {
         }  
     }
 
-    putNoteHandler(req,h){
+    async putNoteHandler(req,h){
         try{
             //membuat validator untuk update data
             this._validator.validateNotePayload(req.payload);
             const { id } = req.params;
 
             //update
-            this._service.editNoteById(id, req.payload);
+            await this._service.editNoteById(id, req.payload);
 
             return {
                 status : 'success',
@@ -144,10 +144,10 @@ class NotesHandler {
         
     }
 
-    deleteNoteByIdHandler(req,h){
+    async deleteNoteByIdHandler(req,h){
         try{
             const {id} = req.params;
-            this._service.deleteNoteById(id);
+            await this._service.deleteNoteById(id);
             const res=h.response({
                 status: 'success',
                 message: 'Catatan berhasil dihapus'

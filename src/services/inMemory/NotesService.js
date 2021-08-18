@@ -39,7 +39,7 @@ class NotesService {
     }
 
     //cari data
-    getNotesById(id) {
+    getNoteById(id) {
         //filter
         const note = this._notes.filter((n) => n.id === id)[0];
 

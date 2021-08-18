@@ -6,18 +6,22 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon ./src/server.js",
-    "lint": "eslint ./src"
+    "lint": "eslint ./src",
+    "migrate": "node-pg-migrate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@hapi/hapi": "^20.1.5",
+    "dotenv": "^10.0.0",
     "eslint": "^7.29.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.23.4",
     "joi": "^17.4.2",
     "nanoid": "^3.1.23",
-    "nodemon": "^2.0.7"
+    "node-pg-migrate": "^5.10.0",
+    "nodemon": "^2.0.7",
+    "pg": "^8.7.1"
   }
 }
