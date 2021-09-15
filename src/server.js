@@ -13,8 +13,15 @@ const NotesService = require('./services/postgres/NotesService');
 //import validator Joi
 const NotesValidator = require('./validator/notes');
 
+//users
+const users = require('./api/users');
+const UsersService = require('./services/postgres/UsersService');
+const UsersValidator = require('./validator/users');
+
 const init = async() =>{
 	const noteService = new NotesService();
+	//instance users
+	const usersService = new UsersService();
 
 	const server = Hapi.server({
 		// port: 5000,
@@ -33,14 +40,22 @@ const init = async() =>{
 	// server.route(routes);
 
 	//register plugin
-	await server.register({
-		plugin: notes,
-		options: {
-			service: noteService,
-			//tambakan validator
-			validator: NotesValidator
-		}
-	});
+	await server.register([
+		{
+			plugin: notes,
+			options: {
+				service: noteService,
+				//tambakan validator
+				validator: NotesValidator
+			},
+			plugin: users,
+			options: {
+				service: usersService,
+				//tambakan validator
+				validator: UsersValidator
+			},
+		},
+	]);
 
 	await server.start();
 	console.log(`Server run at ${server.info.uri}`);
