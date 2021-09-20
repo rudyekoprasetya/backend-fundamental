@@ -114,7 +114,7 @@ class NotesHandler {
 
             return {
                 status : 'success',
-                message : 'Catatan berhasil diubah'
+                message : 'Catatan berhasil diperbarui'
             }
         } catch(error) {
             // const res=h.response({
