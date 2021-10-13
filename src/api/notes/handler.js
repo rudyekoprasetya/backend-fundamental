@@ -19,7 +19,11 @@ class NotesHandler {
             // memasukan validator di handler post 
             this._validator.validateNotePayload(req.payload);
             const {title = 'untitled', body, tags} =req.payload;
-            const noteId = await this._service.addNote({title, body,tags});
+            //ambil id credential
+            const { id: credentialId } = req.auth.credentials;
+
+            const noteId = await this._service.addNote({title, body,tags,credentialId});
+
             const res = h.response({
                 status: 'success',
                 message: 'Catatan berhasil ditambahkan',
@@ -56,8 +60,10 @@ class NotesHandler {
         }
     }
 
-    async getNotesHandler() {
-        const notes = await this._service.getNotes();
+    async getNotesHandler(req,h) {
+        //ambil credential id
+        const { id: credentialId } = req.auth.credentials;
+        const notes = await this._service.getNotes(credentialId);
         return {
             status: 'success',
             data: {
@@ -69,6 +75,10 @@ class NotesHandler {
     async getNoteByIdHandler(req,h) {
         try { 
             const { id } = req.params;
+            //ambil credential id
+            const { id: credentialId } = req.auth.credentials;
+
+            await this._service.verifyNoteOwner(id, credentialId);
             const note = await this._service.getNoteById(id);
             return {
                 status: 'success',
@@ -108,7 +118,10 @@ class NotesHandler {
             //membuat validator untuk update data
             this._validator.validateNotePayload(req.payload);
             const { id } = req.params;
+            //ambil id credential
+            const { id: credentialId} = req.auth.credentials;
 
+            await this._service.verifyNoteOwner(id, credentialId);
             //update
             await this._service.editNoteById(id, req.payload);
 
@@ -147,6 +160,10 @@ class NotesHandler {
     async deleteNoteByIdHandler(req,h){
         try{
             const {id} = req.params;
+            //ambil creadential id
+            const { id: credentialId } = req.auth.credentials;
+
+            await this._service.verifyNoteOwner(id, credentialId);
             await this._service.deleteNoteById(id);
             const res=h.response({
                 status: 'success',
