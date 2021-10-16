@@ -5,10 +5,12 @@ const {mapDBToModel} = require('../../utils');
 //import authorization Error
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 const NotFoundError = require('../../exceptions/NotFoundError');
+const collaborationService = require('../../services/postgres/CollaborationsService')
 
 class NotesService {
     constructor() {
         this._pool = new Pool();
+        this._collaborationService = collaborationService;
     }
 
     //untuk tambah data dalam database
@@ -40,7 +42,11 @@ class NotesService {
     async getNotes(owner) {
         // const query = 'SELECT * FROM notes';
         const query = {
-            text: 'SELECT * FROM notes WHERE owner = $1',
+            // text: 'SELECT * FROM notes WHERE owner = $1',
+            text: `SELECT notes.* FROM notes
+            LEFT JOIN collaborations ON collaborations.note_id = notes.id
+            WHERE notes.owner = $1 OR collaborations.user_id = $1
+            GROUP BY notes.id`,
             values: [owner],
         };
         const res = await this._pool.query(query);
@@ -51,7 +57,11 @@ class NotesService {
     //cari data
     async getNoteById(id) {
         const query={
-            text: 'SELECT * FROM notes WHERE id = $1',
+            // text: 'SELECT * FROM notes WHERE id = $1',
+            text: `SELECT notes.*, users.username
+            FROM notes
+            LEFT JOIN users ON users.id = notes.owner
+            WHERE notes.id = $1`,
             values: [id]
         }
 
@@ -97,7 +107,7 @@ class NotesService {
         }
     }
 
-    //verifikasi
+    //verifikasi note owner
     async verifyNoteOwner(id, owner) {
         const query = {
           text: 'SELECT * FROM notes WHERE id = $1',
@@ -111,6 +121,22 @@ class NotesService {
         if (note.owner !== owner) {
           throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
         }
+    }
+
+    // verifikasi notes akses
+    async verifyNoteAccess(noteId, userId) {
+      try {
+        await this.verifyNoteOwner(noteId, userId);
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          throw error;
+        }
+        try {
+          await this._collaborationService.verifyCollaborator(noteId, userId);
+        } catch {
+          throw error;
+        }
+      }
     }
 }
 
