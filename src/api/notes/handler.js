@@ -22,7 +22,9 @@ class NotesHandler {
             //ambil id credential
             const { id: credentialId } = req.auth.credentials;
 
-            const noteId = await this._service.addNote({title, body,tags,credentialId});
+            const noteId = await this._service.addNote({
+                title, body, tags, owner: credentialId,
+            });
 
             const res = h.response({
                 status: 'success',
@@ -122,7 +124,8 @@ class NotesHandler {
             //ambil id credential
             const { id: credentialId} = req.auth.credentials;
 
-            await this._service.verifyNoteOwner(id, credentialId);
+            // await this._service.verifyNoteOwner(id, credentialId);
+            await this._service.verifyNoteAccess(id, credentialId);
             //update
             await this._service.editNoteById(id, req.payload);
 

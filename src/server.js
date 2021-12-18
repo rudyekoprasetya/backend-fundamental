@@ -35,7 +35,7 @@ const CollaborationsValidator = require('./validator/collaborations');
 const init = async() =>{
 	// instance collaborations
 	const collaborationsService = new CollaborationsService();
-	const noteService = new NotesService(collaborationsService);
+	const notesService = new NotesService(collaborationsService);
 	//instance users
 	const usersService = new UsersService();
 	//instance auth
@@ -87,7 +87,7 @@ const init = async() =>{
 		{
 			plugin: notes,
 			options: {
-			  service: noteService,
+			  service: notesService,
 			  validator: NotesValidator,
 			},
 		},
@@ -111,7 +111,7 @@ const init = async() =>{
 			plugin: collaborations,
 			options: {
 			  collaborationsService,
-			  noteService,
+			  notesService,
 			  validator: CollaborationsValidator,
 			},
 		},

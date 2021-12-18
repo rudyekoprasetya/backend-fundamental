@@ -8,7 +8,7 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const collaborationService = require('../../services/postgres/CollaborationsService')
 
 class NotesService {
-    constructor() {
+    constructor(collaborationService) {
         this._pool = new Pool();
         this._collaborationService = collaborationService;
     }
