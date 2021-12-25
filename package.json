@@ -27,6 +27,7 @@
     "pg": "^8.7.1"
   },
   "dependencies": {
+    "@hapi/inert": "^6.0.4",
     "amqplib": "^0.8.0"
   }
 }

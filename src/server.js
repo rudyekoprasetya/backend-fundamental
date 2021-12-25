@@ -9,6 +9,13 @@ const Jwt = require('@hapi/jwt');
 // const routes = require('./routes');
 //import notes
 const notes = require('./api/notes');
+
+//untuk upload
+const path = require('path');
+
+//plugin inert
+const Inert = require('@hapi/inert');
+
 //import service
 // const NotesService = require('./services/inMemory/NotesService');
 //database
@@ -37,6 +44,11 @@ const _exports = require('./api/exports');
 const ProducerService = require('./services/rabbitmq/ProducerService');
 const ExportsValidator = require('./validator/exports');
 
+// uploads
+const uploads = require('./api/uploads');
+const StorageService = require('./services/storage/StorageService');
+const UploadsValidator = require('./validator/uploads');
+
 const init = async() =>{
 	// instance collaborations
 	const collaborationsService = new CollaborationsService();
@@ -45,6 +57,8 @@ const init = async() =>{
 	const usersService = new UsersService();
 	//instance auth
 	const authenticationsService = new AuthenticationsService();
+	//storage
+	const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
 	
 
 	const server = Hapi.server({
@@ -67,6 +81,9 @@ const init = async() =>{
 	await server.register([
 		{
 		  plugin: Jwt,
+		},
+		{
+		  plugin: Inert,
 		},
 	]);
 
@@ -127,6 +144,13 @@ const init = async() =>{
 			  validator: ExportsValidator,
 			},
 		},
+		{
+			plugin: uploads,
+			options: {
+			  service: storageService,
+			  validator: UploadsValidator,
+			},
+		}	  
 	]);
 
 	await server.start();
