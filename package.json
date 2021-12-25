@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@hapi/inert": "^6.0.4",
-    "amqplib": "^0.8.0"
+    "amqplib": "^0.8.0",
+    "redis": "^4.0.1"
   }
 }

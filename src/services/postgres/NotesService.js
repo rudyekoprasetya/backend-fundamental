@@ -8,9 +8,10 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const collaborationService = require('../../services/postgres/CollaborationsService')
 
 class NotesService {
-    constructor(collaborationService) {
+    constructor(collaborationService, cacheService) {
         this._pool = new Pool();
         this._collaborationService = collaborationService;
+        this._cacheService = cacheService;
     }
 
     //untuk tambah data dalam database
@@ -34,24 +35,43 @@ class NotesService {
             throw new InvariantError('Catatan gagal ditambahkan');
         }
 
+        //hapus cache saat tambah data
+        await this._cacheService.delete(`notes:${owner}`);
+
         //kembalikan nilai
         return res.rows[0].id;
     }
 
     //tampil data
     async getNotes(owner) {
-        // const query = 'SELECT * FROM notes';
+      try {
+        // mendapatkan catatan dari cache
+        const result = await this._cacheService.get(`notes:${owner}`);
+        return JSON.parse(result);
+      } catch(error) {
+         // const query = 'SELECT * FROM notes';
         const query = {
-            // text: 'SELECT * FROM notes WHERE owner = $1',
-            text: `SELECT notes.* FROM notes
-            LEFT JOIN collaborations ON collaborations.note_id = notes.id
-            WHERE notes.owner = $1 OR collaborations.user_id = $1
-            GROUP BY notes.id`,
-            values: [owner],
+          // text: 'SELECT * FROM notes WHERE owner = $1',
+          text: `SELECT notes.* FROM notes
+          LEFT JOIN collaborations ON collaborations.note_id = notes.id
+          WHERE notes.owner = $1 OR collaborations.user_id = $1
+          GROUP BY notes.id`,
+          values: [owner],
         };
+      
+        
         const res = await this._pool.query(query);
+
+        const mappedResult = res.rows.map(mapDBToModel);
+ 
+        // catatan akan disimpan pada cache sebelum fungsi getNotes dikembalikan
+        await this._cacheService.set(`notes:${owner}`, JSON.stringify(mappedResult));
+ 
+        return mappedResult;
+
         //kembalikan dengan Mapping
-        return res.rows.map(mapDBToModel);
+        // return res.rows.map(mapDBToModel);
+      }
     }
 
     //cari data
@@ -80,7 +100,7 @@ class NotesService {
     async editNoteById(id, {title, body, tags}) {
         const updatedAt = new Date().toISOString;
         const query = {
-            text: 'UPDATE notes SET title=$1, body=$2, tags=$3, updated_at=$4 WHERE id = $5 RETURNING id',
+            text: 'UPDATE notes SET title=$1, body=$2, tags=$3, updated_at=$4 WHERE id = $5 RETURNING id, owner',
             values: [title, body, tags, updatedAt, id]
         }
 
@@ -90,12 +110,16 @@ class NotesService {
         if (!res.rows.length) {
             throw new NotFoundError('Gagal memperbarui catatan. Id tidak ditemukan');
         }
+
+        //hapus cache saat ubah data
+        const { owner } = res.rows[0];
+        await this._cacheService.delete(`notes:${owner}`);
     }
 
     //hapus data
     async deleteNoteById(id) {
         const query = {
-            text: 'DELETE FROM notes WHERE id = $1 RETURNING id',
+            text: 'DELETE FROM notes WHERE id = $1 RETURNING id, owner',
             values: [id]
         }
 
@@ -105,6 +129,10 @@ class NotesService {
         if (!res.rows.length) {
             throw new NotFoundError('Catatan gagal dihapus. Id tidak ditemukan');
         }
+
+        //hapus cache
+        const { owner } = result.rows[0];
+        await this._cacheService.delete(`notes:${owner}`);
     }
 
     //verifikasi note owner
